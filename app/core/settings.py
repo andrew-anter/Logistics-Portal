@@ -7,14 +7,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+#  WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-($8#vr1fv#4bt07om6+bdauit&s&l%=!l!676mwiyg(_!)s78i"
 
-# SECURITY WARNING: don't run with debug turned on in production!
+#  WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 DJANGO_APPS = [
@@ -29,6 +28,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
 ]
+
 PROJECT_APPS = [
     "apps.users",
     "apps.companies",
@@ -38,6 +38,9 @@ PROJECT_APPS = [
 
 INSTALLED_APPS = [*DJANGO_APPS, *THIRD_PARTY_APPS, *PROJECT_APPS]
 
+if DEBUG:
+    DEVELOPMENT_APPS = []
+    INSTALLED_APPS = [*DEVELOPMENT_APPS, *INSTALLED_APPS]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
