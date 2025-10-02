@@ -5,4 +5,54 @@ description = "A multi-tenant backend system for a fictional logistics SaaS plat
 readme = "README.md"
 authors = [{ name = "Andrew Anter", email = "andrew.anter@gmail.com" }]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["celery>=5.5.3", "django>=5.2.7", "djangorestframework>=3.16.1"]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.6",
+    "django-types>=0.22.0",
+    "pytest>=8.4.2",
+    "pytest-celery>=1.2.1",
+    "pytest-django>=4.11.1",
+    "ruff>=0.13.3",
+]
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "BLE",
+    "FBT",
+    "A",
+    "COM",
+    "C4",
+    "DTZ",
+    "DJ",
+    "EM",
+    "FIX",
+    "FA",
+    "INT",
+    "ISC",
+    "ICN",
+    "LOG",
+    "G",
+    "T20",
+    "PT",
+    "RSE",
+    "RET",
+    "SIM",
+    "TC",
+    "ARG",
+    "PTH",
+    "FLY",
+    "I",
+    "N",
+    "PERF",
+    "E",
+    "W",
+    "RUF",
+]
+
+[tool.pyright]
+include = ["./app"]
+exclude = ["**/__pycache__"]
+reportMissingTypeStubs = true
