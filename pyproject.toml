@@ -10,6 +10,7 @@ dependencies = ["celery>=5.5.3", "django>=5.2.7", "djangorestframework>=3.16.1"]
 [dependency-groups]
 dev = [
     "basedpyright>=1.31.6",
+    "django-stubs-ext>=5.2.5",
     "django-types>=0.22.0",
     "pytest>=8.4.2",
     "pytest-celery>=1.2.1",
@@ -55,4 +56,6 @@ select = [
 [tool.pyright]
 include = ["./app"]
 exclude = ["**/__pycache__"]
-reportMissingTypeStubs = true
+typeCheckingMode = "standard"
+reportMissingImports = true
+reportUnusedVariable = "warning"
