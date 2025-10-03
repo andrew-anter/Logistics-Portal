@@ -10,8 +10,8 @@ def get_current_tenant() -> Company:
     return getattr(_thread_locals, "company", None)  # pyright: ignore
 
 
-def set_current_tenant(tenant: Company) -> None:
-    _thread_locals.tenant = tenant
+def set_current_tenant(company: Company) -> None:
+    _thread_locals.company = company
 
 
 def set_current_user(user: User) -> None:
