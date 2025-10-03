@@ -8,7 +8,7 @@ from ..services import create_company
 @pytest.mark.django_db
 def test_create_service_with_valid_data() -> None:
     name = "Test Name"
-    domain = "mycompany"
+    domain = "subdomain"
     active = True
 
     company = create_company(name=name, domain=domain, active=active)
@@ -22,7 +22,7 @@ def test_create_service_with_valid_data() -> None:
 @pytest.mark.django_db
 def test_create_service_with_invalid_data() -> None:
     name = ""
-    domain = ""
+    domain = "invalid domain"
     active = True
 
     with pytest.raises(ValidationError):
