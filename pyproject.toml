@@ -59,3 +59,6 @@ exclude = ["**/__pycache__"]
 typeCheckingMode = "standard"
 reportMissingImports = true
 reportUnusedVariable = "warning"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings"
