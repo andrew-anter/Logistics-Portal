@@ -1,4 +1,4 @@
-from core.thread_locals import _thread_locals, set_current_tenant
+from core.thread_locals import set_current_tenant
 from django.http import Http404
 
 from .models import Company
