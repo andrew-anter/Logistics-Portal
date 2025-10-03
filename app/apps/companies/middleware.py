@@ -12,6 +12,8 @@ class TenantMiddleware:
         host_parts = request.get_host().split(".")
         subdomain = host_parts[0]
 
+        set_current_user(request.user)
+
         if len(host_parts) == 1:
             return self.get_response(request)
 
@@ -21,8 +23,5 @@ class TenantMiddleware:
             raise Http404
 
         set_current_tenant(tenant)
-
-        if request.user.is_authenticated:
-            set_current_user(request.user)
 
         return self.get_response(request)
