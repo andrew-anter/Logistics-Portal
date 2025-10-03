@@ -4,6 +4,8 @@ from core.thread_locals import get_current_tenant
 from django.db import models
 from django.db.models import QuerySet
 
+from .models import Company
+
 
 class TenantManager(models.Manager):
     def get_queryset(self) -> QuerySet[Any]:
@@ -16,3 +18,10 @@ class TenantManager(models.Manager):
         # If no tenant is set, return an empty queryset
         # This prevents data leakage if middleware fails
         return queryset.none()
+
+    def for_tenant(self, tenant: Company) -> QuerySet[Any]:
+        """
+        Returns a queryset filtered for a specific tenant.
+        This is a helper for tests and special cases.
+        """
+        return super().get_queryset().filter(company=tenant)
