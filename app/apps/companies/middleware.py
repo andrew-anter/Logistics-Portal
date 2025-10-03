@@ -1,4 +1,4 @@
-from core.thread_locals import _thread_locals
+from core.thread_locals import _thread_locals, set_current_tenant
 from django.http import Http404
 
 from .models import Company
@@ -24,6 +24,6 @@ class TenantMiddleware:
         request.tenant = tenant
 
         # Store it in thread-local storage for access in managers/models
-        _thread_locals.tenant = tenant
+        set_current_tenant(tenant)
 
         return self.get_response(request)
