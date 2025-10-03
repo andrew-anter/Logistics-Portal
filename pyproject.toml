@@ -52,10 +52,11 @@ select = [
     "W",
     "RUF",
 ]
+per-file-ignores = { "**/tests/*" = ["ANN", "ARG", "FBT", "S101"] }
 
 [tool.pyright]
 include = ["./app"]
-exclude = ["**/__pycache__"]
+exclude = ["**/__pycache__", "**/tests"]
 typeCheckingMode = "standard"
 reportMissingImports = true
 reportUnusedVariable = "warning"
