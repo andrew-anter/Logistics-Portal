@@ -1,8 +1,11 @@
 from django.contrib import admin
-from .models import Profile
-from .forms import ProfileAdminForm
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
-from .services import unblock_profiles_service, block_profiles_service
+
+from .forms import ProfileAdminForm
+from .models import Profile
+from .services import block_profiles_service, unblock_profiles_service
 
 
 @admin.register(Profile)
@@ -40,6 +43,22 @@ class ProfileAdmin(admin.ModelAdmin):
             )
 
         return base_filters
+
+    def history_view(self, request, object_id, extra_context=None):
+        """Exclude Superuser actions from history view for all non superusers"""
+        response = super().history_view(request, object_id, extra_context)
+
+        if not request.user.is_superuser:
+            profile_content_type = ContentType.objects.get_for_model(Profile)
+            log_entries = LogEntry.objects.filter(
+                object_id=object_id,
+                content_type=profile_content_type,
+            )
+
+            filtered_log_entries = log_entries.exclude(user__is_superuser=True)
+            response.context_data["action_list"] = filtered_log_entries
+
+        return response
 
     @admin.display(description="Username")
     def username(self, obj):
