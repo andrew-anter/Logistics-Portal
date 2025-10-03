@@ -12,8 +12,11 @@ SECRET_KEY = "django-insecure-($8#vr1fv#4bt07om6+bdauit&s&l%=!l!676mwiyg(_!)s78i
 
 #  WARNING: don't run with debug turned on in production!
 DEBUG = True
+MAIN_DOMAIN = "localhost"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [f".{MAIN_DOMAIN}", MAIN_DOMAIN]
+CSRF_TRUSTED_ORIGINS = [f"https://*.{MAIN_DOMAIN}", f"http://*.{MAIN_DOMAIN}"]
+
 
 # Application definition
 DJANGO_APPS = [
@@ -45,6 +48,7 @@ if DEBUG:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "apps.companies.middleware.TenantMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",

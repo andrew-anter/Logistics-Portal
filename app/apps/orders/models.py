@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 
+from apps.companies.managers import TenantManager
+
 
 class Order(models.Model):
     class Status(models.IntegerChoices):
@@ -18,6 +20,8 @@ class Order(models.Model):
     has_been_processed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    company = models.ForeignKey(to="companies.Company", on_delete=models.CASCADE)
+    objects = TenantManager()
 
     def __str__(self) -> str:
         return f"Order {self.reference_code}"
