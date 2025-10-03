@@ -11,8 +11,12 @@ class Profile(models.Model):
         related_name="profile",
     )
     company = models.ForeignKey(to="companies.Company", on_delete=models.CASCADE)
-    role = models.ForeignKey(to=Group, null=True, on_delete=models.SET_NULL)
-    is_blocked = models.BooleanField(default=True)
+    role = models.ForeignKey(
+        to=Group,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    is_blocked = models.BooleanField(default=False)
     objects = TenantManager()
 
     def __str__(self) -> str:
