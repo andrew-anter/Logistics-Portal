@@ -1,4 +1,4 @@
-from core.thread_locals import set_current_tenant
+from core.thread_locals import set_current_tenant, set_current_user
 from django.http import Http404
 
 from .models import Company
@@ -20,10 +20,9 @@ class TenantMiddleware:
         except Company.DoesNotExist:
             raise Http404
 
-        # Store the tenant on the request object for easy access in views
-        request.tenant = tenant
-
-        # Store it in thread-local storage for access in managers/models
         set_current_tenant(tenant)
+
+        if request.user.is_authenticated:
+            set_current_user(request.user)
 
         return self.get_response(request)
