@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
+from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
 
@@ -13,7 +13,7 @@ class ProfileAdmin(admin.ModelAdmin):
     form = ProfileAdminForm
     search_fields = ("user__username", "user__first_name", "user__last_name")
 
-    def get_list_display(self, request):
+    def get_list_display(self, request):  # noqa: ANN001, ANN201
         """
         Dynamically sets the columns in the list view based on user type.
         """
@@ -29,7 +29,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
         return base_fields
 
-    def get_list_filter(self, request):
+    def get_list_filter(self, request):  # noqa: ANN001, ANN201
         """
         Dynamically sets the filters in the sidebar based on user type.
         """
@@ -44,7 +44,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
         return base_filters
 
-    def history_view(self, request, object_id, extra_context=None):
+    def history_view(self, request, object_id, extra_context=None):  # noqa: ANN001, ANN201
         """Exclude Superuser actions from history view for all non superusers"""
         response = super().history_view(request, object_id, extra_context)
 
@@ -56,37 +56,46 @@ class ProfileAdmin(admin.ModelAdmin):
             )
 
             filtered_log_entries = log_entries.exclude(user__is_superuser=True)
-            response.context_data["action_list"] = filtered_log_entries
+            response.context_data["action_list"] = filtered_log_entries  # pyright: ignore[reportAttributeAccessIssue]
 
         return response
 
+    def get_form(self, request, obj=None, **kwargs):  # noqa: ANN001, ANN003, ANN201  # pyright: ignore[reportIncompatibleMethodOverride]
+        """
+        Dynamically hide the company field for non-superusers.
+        """
+        form = super().get_form(request, obj, **kwargs)
+        if not request.user.is_superuser:
+            form.base_fields.pop("company", None)  # pyright: ignore[reportAttributeAccessIssue]
+        return form
+
     @admin.display(description="Username")
-    def username(self, obj):
+    def username(self, obj):  # noqa: ANN001, ANN201
         return obj.user.username
 
     @admin.display(description="Full Name")
-    def full_name(self, obj):
+    def full_name(self, obj):  # noqa: ANN001, ANN201
         return obj.user.get_full_name()
 
     @admin.display(description="Email")
-    def email(self, obj):
+    def email(self, obj):  # noqa: ANN001, ANN201
         return obj.user.email
 
     # --- Your existing custom actions and methods ---
-    def get_actions(self, request):
+    def get_actions(self, request):  # noqa: ANN001, ANN201
         actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
 
-    def unblock_profiles(self, request, queryset: QuerySet[Profile]) -> None:
+    def unblock_profiles(self, request, queryset: QuerySet[Profile]) -> None:  # noqa: ANN001
         unblock_profiles_service(qs=queryset)
         self.message_user(request, "Selected profiles have been unblocked.")
 
-    def block_profiles(self, request, queryset: QuerySet[Profile]) -> None:
+    def block_profiles(self, request, queryset: QuerySet[Profile]) -> None:  # noqa: ANN001
         block_profiles_service(qs=queryset)
         self.message_user(request, "Selected profiles have been blocked.")
 
-    unblock_profiles.short_description = "Unblock Selected Profiles"
-    block_profiles.short_description = "Block Selected Profiles"
-    actions = (unblock_profiles, block_profiles)
+    unblock_profiles.short_description = "Unblock Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]
+    block_profiles.short_description = "Block Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]
+    actions = (unblock_profiles, block_profiles)  # pyright: ignore[reportAssignmentType]
