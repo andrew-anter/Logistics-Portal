@@ -13,7 +13,6 @@ def test_create_roles_signal_handler() -> None:
 
     # 2. Act: Call the signal handler function directly
     create_roles_and_permissions(sender=DummySender)
-    print(f"roles: {len(ROLES)}")
 
     # 3. Assert: Check that the groups and permissions were created
     assert Group.objects.count() == len(ROLES)
