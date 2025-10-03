@@ -5,10 +5,14 @@ from apps.companies.managers import TenantManager
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    user = models.OneToOneField(to=User, on_delete=models.PROTECT)
     company = models.ForeignKey(to="companies.Company", on_delete=models.CASCADE)
     role = models.ForeignKey(to=Group, null=True, on_delete=models.SET_NULL)
     objects = TenantManager()
 
     def __str__(self) -> str:
         return self.user.get_full_name()
+
+    @property
+    def is_blocked(self) -> bool:
+        return not self.user.is_active
