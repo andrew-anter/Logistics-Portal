@@ -18,10 +18,11 @@ class TenantMiddleware:
             return self.get_response(request)
 
         try:
-            tenant = Company.objects.get(domain=subdomain, is_active=True)
+            company = Company.objects.get(domain=subdomain, is_active=True)
         except Company.DoesNotExist:
             raise Http404
 
-        set_current_tenant(tenant)
+        set_current_tenant(company)
+        request.company = company
 
         return self.get_response(request)
