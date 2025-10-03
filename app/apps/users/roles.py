@@ -5,6 +5,8 @@ To add a new role, you only need to add an entry here.
 
 from enum import Enum
 
+from django.contrib.auth.models import Group
+
 ROLES = {
     "admin": {
         "permissions": [
@@ -37,5 +39,12 @@ ROLES = {
     },
 }
 
-# This dynamically creates an Enum from the keys of the ROLES dictionary.
-RoleEnum = Enum("RoleEnum", {role.upper(): role for role in ROLES})
+
+class Role(str, Enum):
+    ADMIN = "admin"
+    OPERATOR = "operator"
+    VIEWER = "viewer"
+
+
+def get_role_group(*, role: str) -> Group:
+    return Group.objects.get(name=role)
