@@ -4,7 +4,7 @@ from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as CoreValidationError
 
 from .models import Profile
-from .services import create_profile_service
+from .services import create_profile_service, update_profile_service
 
 
 class ProfileAdminForm(forms.ModelForm):
@@ -62,17 +62,10 @@ class ProfileAdminForm(forms.ModelForm):
 
         else:
             profile = super().save(commit=False)
-            user = profile.user
-            user.username = self.cleaned_data["username"]
-            user.email = self.cleaned_data["email"]
-            user.first_name = self.cleaned_data["first_name"]
-            user.last_name = self.cleaned_data["last_name"]
-            user.set_password(self.cleaned_data["password"])
+            update_profile_service(profile=profile, **self.cleaned_data)
 
             if commit:
                 super().save(commit=False)
-                user.save()
-                profile.save()
                 self.save_m2m()
 
         return self.instance
