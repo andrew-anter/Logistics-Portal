@@ -13,7 +13,7 @@ class Order(models.Model):
         FAILED = 4
 
     reference_code = models.UUIDField(default=uuid.uuid4)
-    product = models.ForeignKey(to="products.Product", on_delete=models.CASCADE)
+    product = models.ForeignKey(to="products.Product", on_delete=models.PROTECT)
     quantity = models.IntegerField(default=0)
     status = models.IntegerField(choices=Status)  # pyright: ignore
     created_by = models.ForeignKey("users.Profile", on_delete=models.CASCADE)
