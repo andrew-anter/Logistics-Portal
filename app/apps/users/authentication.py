@@ -6,6 +6,7 @@ from apps.companies.models import Company
 
 class TenantTokenAuthentication(TokenAuthentication):
     def authenticate_credentials(self, key):  # pyright: ignore[reportIncompatibleMethodOverride]  # noqa: ANN001, ANN201
+        # First, find the company from the request's host
         host = self.get_host(self.request)  # pyright: ignore[reportAttributeAccessIssue]
         subdomain = host.split(".")[0]
 
