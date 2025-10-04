@@ -56,3 +56,22 @@ def approve_order_service(*, order: Order) -> None:
 
     order.has_been_processed = True
     order.save()
+
+
+def retry_order_service(*, order: Order) -> Order:
+    """
+    Resets a FAILED order to PENDING and re-queues it for processing.
+    """
+    from .tasks import process_order_task
+
+    if order.status != Order.Status.FAILED:
+        msg = "Only failed orders can be retried."
+        raise ValueError(msg)
+
+    order.status = Order.Status.PENDING
+    order.has_been_processed = False
+    order.save()
+
+    process_order_task.delay(order.pk)
+
+    return order

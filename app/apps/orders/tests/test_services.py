@@ -1,10 +1,12 @@
+from unittest.mock import patch
+
 import pytest
 
 from apps.products.models import Product
 from apps.users.models import Profile
 
 from ..models import Order
-from ..services import approve_order_service, create_order_service
+from ..services import approve_order_service, create_order_service, retry_order_service
 
 
 @pytest.mark.django_db
@@ -67,3 +69,26 @@ def test_create_order_service(
 
     # Assert that the background task was called exactly once with the new order's ID
     mock_process_task.assert_called_once_with(new_order.pk)
+
+
+@pytest.mark.django_db
+def test_retry_order_service(product, user_profile, company, mocker):
+    # 1. Arrange: Create an order that is already in a FAILED state
+    order = create_order_service(
+        product=product,
+        quantity=20,
+        created_by=user_profile,
+        company=company,
+    )
+
+    mock_process_task = mocker.patch("apps.orders.tasks.process_order_task.delay")
+
+    # 2. Act: Call the retry service
+    retried_order = retry_order_service(order=order)
+
+    # 3. Assert: Check that the order's state was correctly reset
+    assert retried_order.status == Order.Status.PENDING
+    assert retried_order.has_been_processed is False
+
+    # Assert that the background task was re-queued
+    mock_process_task.assert_called_once_with(order.pk)
