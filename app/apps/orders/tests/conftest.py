@@ -50,8 +50,9 @@ def setup_current_tenant(company):
 
 
 @pytest.fixture
-def test_data(company, product, user_profile, setup_current_tenant):
+def test_data(company, product, user_profile, mocker, setup_current_tenant):
     """Fixture to create a company, user, and some orders."""
+    mock_process_task = mocker.patch("apps.orders.tasks.process_order_task.delay")
 
     # Create a few orders for the export
     for _ in range(5):

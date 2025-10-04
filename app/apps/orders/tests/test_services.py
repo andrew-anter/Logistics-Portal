@@ -12,14 +12,15 @@ def test_approve_order_success_with_sufficient_stock(
     product: Product,
     user_profile: Profile,
     setup_current_tenant,
+    mocker,
 ):
+    mock_process_task = mocker.patch("apps.orders.tasks.process_order_task.delay")
     # 1. Arrange: Create a pending order with a quantity we know is in stock
-    order = Order.objects.create(
+    order = create_order_service(
         product=product,
         quantity=10,
         created_by=user_profile,
         company=user_profile.company,
-        status=Order.Status.PENDING,
     )
     assert product.stock_quantity == 100
 
@@ -70,7 +71,15 @@ def test_create_order_service(
 
 
 @pytest.mark.django_db
-def test_retry_order_service(product, user_profile, company, mocker):
+def test_retry_order_service(
+    product,
+    user_profile,
+    company,
+    mocker,
+    setup_current_tenant,
+):
+    mock_process_task = mocker.patch("apps.orders.tasks.process_order_task.delay")
+
     # 1. Arrange: Create an order that is already in a FAILED state
     order = create_order_service(
         product=product,
@@ -79,9 +88,12 @@ def test_retry_order_service(product, user_profile, company, mocker):
         company=company,
     )
 
-    mock_process_task = mocker.patch("apps.orders.tasks.process_order_task.delay")
+    order.status = Order.Status.FAILED
+    order.has_been_processed = True
+    order.save()
 
     # 2. Act: Call the retry service
+
     retried_order = retry_order_service(order=order)
 
     # 3. Assert: Check that the order's state was correctly reset
@@ -89,4 +101,4 @@ def test_retry_order_service(product, user_profile, company, mocker):
     assert retried_order.has_been_processed is False
 
     # Assert that the background task was re-queued
-    mock_process_task.assert_called_once_with(order.pk)
+    assert mock_process_task.call_count == 2

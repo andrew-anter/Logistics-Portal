@@ -24,6 +24,7 @@ def process_order_task(order_id: int) -> None:
 
 
 @shared_task
+@transaction.atomic
 def generate_export_file_task(
     export_id: int,
     order_ids: list[int],
