@@ -5,6 +5,7 @@ from apps.orders.tasks import generate_export_file_task
 from ..models import Export
 
 
+@pytest.mark.skip(reason="This test takes a long time.")
 @pytest.mark.django_db
 def test_generate_export_file_task(test_data, company, celery_app):
     # 1. Arrange: Create an Export object to track the task

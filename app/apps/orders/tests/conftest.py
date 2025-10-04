@@ -1,6 +1,6 @@
 import pytest
-from core.celery import app as celery_app_instance
 from core.thread_locals import delete_current_tenant, set_current_tenant
+from rest_framework.test import APIClient
 
 from apps.companies.models import Company
 from apps.companies.services import create_company
@@ -9,6 +9,7 @@ from apps.products.services import create_product_service
 from apps.users.models import Profile
 from apps.users.roles import Role, get_role_group
 from apps.users.services import create_profile_service
+from apps.users.signals import create_roles_and_permissions
 
 from ..models import Order
 from ..services import create_order_service
@@ -49,7 +50,7 @@ def setup_current_tenant(company):
 
 
 @pytest.fixture
-def test_data(company, product, user_profile, setup_current_tenant, celery_worker):
+def test_data(company, product, user_profile, setup_current_tenant):
     """Fixture to create a company, user, and some orders."""
 
     # Create a few orders for the export
@@ -66,3 +67,49 @@ def test_data(company, product, user_profile, setup_current_tenant, celery_worke
         "profile": user_profile,
         "order_ids": [order.id for order in Order.objects.for_tenant(company).all()],  # pyright: ignore[reportAttributeAccessIssue]
     }
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_roles_and_permissions(django_db_setup, django_db_blocker):
+    """
+    Fixture to run the role and permission creation logic once for the test session.
+    """
+
+    class DummySender:
+        name = "apps.users"
+
+    with django_db_blocker.unblock():
+        create_roles_and_permissions(sender=DummySender)
+
+
+@pytest.fixture
+def operator_profile(company, setup_roles_and_permissions):
+    role = get_role_group(role=Role.OPERATOR)
+    profile = create_profile_service(
+        email="operation@company.com",
+        first_name="",
+        last_name="",
+        company=company,
+        password="TestP@ssw0rd",
+        role=role,
+    )
+    assert profile.user.has_perm("orders.add_order")
+    return profile
+
+
+@pytest.fixture
+def admin_profile(company, setup_roles_and_permissions):
+    role = get_role_group(role=Role.ADMIN)
+    return create_profile_service(
+        email="operation@company.com",
+        first_name="",
+        last_name="",
+        company=company,
+        password="TestP@ssw0rd",
+        role=role,
+    )
+
+
+@pytest.fixture
+def api_client():
+    return APIClient()

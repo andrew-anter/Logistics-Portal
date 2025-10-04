@@ -13,10 +13,15 @@ prodcuts_urlpatterns = [
     path("api/products/", include("apps.products.urls")),
 ]
 
+orders_urlpatterns = [
+    path("api/orders/", include("apps.orders.urls")),
+]
+
 
 urlpatterns = [
     *core_urlpatterns,
     *prodcuts_urlpatterns,
+    *orders_urlpatterns,
 ]
 
 
