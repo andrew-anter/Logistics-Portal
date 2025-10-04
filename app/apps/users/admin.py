@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import QuerySet
+from django.db.models import Count, Q, QuerySet
+
+from apps.orders.models import Order
 
 from .forms import ProfileAdminForm
 from .models import Profile, User
@@ -101,4 +103,35 @@ class ProfileAdmin(admin.ModelAdmin):
 
     unblock_profiles.short_description = "Unblock Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]
     block_profiles.short_description = "Block Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]
-    actions = (unblock_profiles, block_profiles)  # pyright: ignore[reportAssignmentType]
+
+    def deactivate_profiles_with_failed_orders(self, request, queryset) -> None:  # noqa: ANN001, ARG002
+        """
+        Finds and deactivates any profiles that have 3 or more failed orders.
+        Note: This action ignores the selected orders (queryset).
+        """
+        profiles_to_block = Profile.objects.annotate(
+            failed_order_count=Count(
+                "order",
+                filter=Q(order__status=Order.Status.FAILED),
+            ),
+        ).filter(failed_order_count__gte=3)
+
+        count = 0
+        for profile in profiles_to_block:
+            if not profile.is_blocked:
+                block_profile_service(profile=profile)
+                count += 1
+        self.message_user(
+            request,
+            f"{count} profiles have been blocked due to excessive failed orders.",
+        )
+
+    deactivate_profiles_with_failed_orders.short_description = (  # pyright: ignore[reportFunctionMemberAccess]
+        "Deactivate profiles with 3+ failed orders"
+    )
+
+    actions = (
+        unblock_profiles,
+        block_profiles,
+        deactivate_profiles_with_failed_orders,
+    )  # pyright: ignore[reportAssignmentType]
