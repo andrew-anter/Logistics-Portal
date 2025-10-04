@@ -55,6 +55,8 @@ select = [
 per-file-ignores = { "**/tests/*" = ["ANN", "ARG", "FBT", "S101"] }
 
 [tool.pyright]
+venvPath = "."
+venv = ".venv"
 include = ["./app"]
 exclude = ["**/__pycache__", "**/tests"]
 typeCheckingMode = "standard"

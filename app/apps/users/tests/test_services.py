@@ -1,9 +1,8 @@
 import pytest
-from django.contrib.auth.models import User
 
 from apps.companies.services import create_company
 
-from ..models import Profile
+from ..models import Profile, User
 from ..roles import Role, get_role_group
 from ..services import (
     block_profiles_service,
@@ -15,7 +14,6 @@ from ..services import (
 
 @pytest.mark.django_db
 def test_create_profile(company) -> None:
-    username = "test"
     email = "test@example.com"
     first_name = "test"
     last_name = "test last name"
@@ -23,7 +21,6 @@ def test_create_profile(company) -> None:
     role = get_role_group(role=Role.ADMIN)
 
     user_profile = create_profile_service(
-        username=username,
         email=email,
         first_name=first_name,
         last_name=last_name,
@@ -39,7 +36,6 @@ def test_update_profile_service(user_profile, company):
     admin_role = get_role_group(role=Role.ADMIN)
     new_company = create_company(name="new company", domain="domain")
     update_data = {
-        "username": "updated_user",
         "email": "updated@test.com",
         "first_name": "Updated",
         "last_name": "User",
@@ -55,7 +51,6 @@ def test_update_profile_service(user_profile, company):
     user_profile.refresh_from_db()
 
     # Assert that each attribute was updated correctly
-    assert user.username == "updated_user"
     assert user.email == "updated@test.com"
     assert user.first_name == "Updated"
     assert user.last_name == "User"

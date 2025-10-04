@@ -1,7 +1,26 @@
-from django.contrib.auth.models import Group, User
+import uuid
+
+from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 
 from apps.companies.managers import TenantManager
+
+
+class User(AbstractUser):
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        default=uuid.uuid4,  # pyright: ignore[reportArgumentType]
+        help_text="Required. A unique identifier for the user.",
+    )
+    email = models.EmailField()
+
+    # The login field remains 'username'
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
+
+    def __str__(self):
+        return self.email
 
 
 class Profile(models.Model):

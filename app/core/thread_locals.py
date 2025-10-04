@@ -1,7 +1,6 @@
 from threading import local
 
 from apps.companies.models import Company
-from django.contrib.auth.models import User
 
 _thread_locals = local()
 
@@ -14,9 +13,9 @@ def set_current_tenant(company: Company) -> None:
     _thread_locals.company = company
 
 
-def set_current_user(user: User) -> None:
+def set_current_user(user) -> None:  # noqa: ANN001
     _thread_locals.user = user
 
 
-def get_current_user() -> User:
+def get_current_user():  # noqa: ANN201
     return getattr(_thread_locals, "user", None)  # pyright: ignore
