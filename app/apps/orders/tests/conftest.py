@@ -1,6 +1,5 @@
-import threading
-
 import pytest
+from core.celery import app as celery_app_instance
 from core.thread_locals import delete_current_tenant, set_current_tenant
 
 from apps.companies.models import Company
@@ -10,6 +9,9 @@ from apps.products.services import create_product_service
 from apps.users.models import Profile
 from apps.users.roles import Role, get_role_group
 from apps.users.services import create_profile_service
+
+from ..models import Order
+from ..services import create_order_service
 
 
 @pytest.fixture
@@ -39,11 +41,28 @@ def product(company: Company) -> Product:
     )
 
 
-thread_data = threading.local()
-
-
 @pytest.fixture
 def setup_current_tenant(company):
     set_current_tenant(company)
     yield
     delete_current_tenant()
+
+
+@pytest.fixture
+def test_data(company, product, user_profile, setup_current_tenant, celery_worker):
+    """Fixture to create a company, user, and some orders."""
+
+    # Create a few orders for the export
+    for _ in range(5):
+        create_order_service(
+            created_by=user_profile,
+            company=company,
+            quantity=30,
+            product=product,
+        )
+
+    return {
+        "company": company,
+        "profile": user_profile,
+        "order_ids": [order.id for order in Order.objects.for_tenant(company).all()],  # pyright: ignore[reportAttributeAccessIssue]
+    }
