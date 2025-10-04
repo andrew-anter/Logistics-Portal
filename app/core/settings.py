@@ -1,5 +1,6 @@
-import sys
 from pathlib import Path
+
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -8,12 +9,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-#  WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-($8#vr1fv#4bt07om6+bdauit&s&l%=!l!676mwiyg(_!)s78i"
-
-#  WARNING: don't run with debug turned on in production!
-DEBUG = True
-MAIN_DOMAIN = "localhost"
+# --- Load Environment Variables ---
+SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
+MAIN_DOMAIN = config("MAIN_DOMAIN", default="localhost")
 
 ALLOWED_HOSTS = [f".{MAIN_DOMAIN}", MAIN_DOMAIN]
 CSRF_TRUSTED_ORIGINS = [f"https://*.{MAIN_DOMAIN}", f"http://*.{MAIN_DOMAIN}"]
@@ -29,10 +28,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = [
-    "rest_framework",
-    "rest_framework.authtoken",
-]
+THIRD_PARTY_APPS = ["rest_framework", "rest_framework.authtoken", "decouple"]
 
 PROJECT_APPS = [
     "apps.users",
@@ -97,8 +93,12 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
+        "HOST": config("POSTGRES_HOST"),
+        "PORT": config("POSTGRES_PORT", cast=int),
     },
 }
 
@@ -145,8 +145,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 
-CELERY_BROKER_URL = "redis://redis:6379/0"
-CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+# --- Celery Configuration ---
+REDIS_HOST = config("REDIS_HOST", default="localhost")
+REDIS_PORT = config("REDIS_PORT", default="6379", cast=int)
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

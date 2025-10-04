@@ -1,5 +1,5 @@
 # Stage 1: Build dependencies
-FROM python:3.13-slim as builder
+FROM python:3.13-slim AS builder
 WORKDIR /app
 RUN pip install uv
 COPY pyproject.toml uv.lock ./
@@ -7,6 +7,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv pip install --system --no-cache .
 
 # Stage 2: Final application image
+
 FROM python:3.13-slim
 WORKDIR /app
 
@@ -15,11 +16,11 @@ RUN useradd -ms /bin/bash appuser
 USER appuser
 
 # Copy installed dependencies from the builder stage
-COPY --from-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from-builder /usr/local/bin /usr/local/bin
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY . .
+COPY ./app .
 
 # Expose the port the app runs on
 EXPOSE 8000
