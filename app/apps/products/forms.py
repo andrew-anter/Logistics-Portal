@@ -14,8 +14,8 @@ class ProductAdminForm(forms.ModelForm):
         super().save(commit=False)
         product_data: ProductData = {
             "name": self.cleaned_data["name"],
-            "stock_quantity": self.cleaned_data["stock_quantity"],
             "is_active": self.cleaned_data["is_active"],
+            "stock_quantity": self.cleaned_data["stock_quantity"],
         }
 
         if not self.instance.pk:
@@ -23,8 +23,6 @@ class ProductAdminForm(forms.ModelForm):
                 company = get_current_tenant()
             else:
                 company = self.cleaned_data.get("company")
-            if request and not request.user.is_superuser:
-                company = request.user.profile.company
 
             if not company:
                 msg = "Could not determine the company for the product."

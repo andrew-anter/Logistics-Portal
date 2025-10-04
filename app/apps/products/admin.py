@@ -1,11 +1,11 @@
 from django.contrib import admin
-
 from django.db.models import QuerySet
 
 from apps.products.services import (
     activate_products_service,
     deactivate_products_service,
 )
+
 from .forms import ProductAdminForm
 from .models import Product
 
@@ -25,12 +25,6 @@ class ProductAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ("company", "is_active")
         return ("is_active",)
-
-    def get_form_kwargs(self, request, obj=None):  # noqa: ANN001, ANN201
-        """Pass the request to the form."""
-        kwargs = super().get_form_kwargs(request, obj)  # pyright: ignore[reportAttributeAccessIssue]
-        kwargs["request"] = request
-        return kwargs
 
     def get_form(self, request, obj=None, **kwargs):  # noqa: ANN001, ANN003, ANN201  # pyright: ignore[reportIncompatibleMethodOverride]
         """Dynamically hide the company field for non-superusers."""
