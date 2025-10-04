@@ -13,6 +13,10 @@ def set_current_tenant(company: Company) -> None:
     _thread_locals.company = company
 
 
+def delete_current_tenant() -> None:
+    delattr(_thread_locals, "company")
+
+
 def set_current_user(user) -> None:  # noqa: ANN001
     _thread_locals.user = user
 
