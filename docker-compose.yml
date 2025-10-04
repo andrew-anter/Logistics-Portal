@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=logistics_db
+      - POSTGRES_USER=logistics_user
+      - POSTGRES_PASSWORD=logistics_pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logistics_user -d logistics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000" # For direct debugging if needed
+    environment:
+      - POSTGRES_DB=logistics_db
+      - POSTGRES_USER=logistics_user
+      - POSTGRES_PASSWORD=logistics_pass
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_DB=logistics_db
+      - POSTGRES_USER=logistics_user
+      - POSTGRES_PASSWORD=logistics_pass
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      app:
+        condition: service_started
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      app:
+        condition: service_started
+
+volumes:
+  postgres_data:
