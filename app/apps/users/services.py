@@ -1,8 +1,8 @@
 from typing import NotRequired, TypedDict, Unpack
 
 from django.contrib.auth.models import Group
+from django.contrib.sessions.models import Session
 from django.db import transaction
-from django.db.models import QuerySet
 
 from apps.companies.models import Company
 
@@ -67,20 +67,46 @@ def update_profile_service(profile: Profile, **data: Unpack[ProfileData]) -> Pro
 
     # Update Profile fields
     profile.role = data.get("role", profile.role)
-    profile.is_blocked = data.get("is_blocked", profile.is_blocked)
     profile.company = data.get("company", profile.company)
+    if data.get("is_blocked"):
+        block_profile_service(profile=profile)
 
     profile.save()
 
     return profile
 
 
-def block_profiles_service(*, qs: QuerySet[Profile]) -> None:
-    qs.update(is_blocked=True)
+@transaction.atomic
+def block_profile_service(*, profile: Profile) -> None:
+    """
+    Blocks a user's profile and invalidates all their active sessions.
+    """
+    user = profile.user
+
+    for session in Session.objects.all():
+        session_data = session.get_decoded()
+        if session_data.get("_auth_user_id") == str(user.pk):
+            session.delete()
+
+    profile.is_blocked = True
+    profile.save()
+
+    user.is_active = False
+    user.save()
 
 
-def unblock_profiles_service(*, qs: QuerySet[Profile]) -> None:
-    qs.update(is_blocked=False)
+@transaction.atomic
+def unblock_profile_service(*, profile: Profile) -> None:
+    """
+    Unblocks a user's profile.
+    """
+    user = profile.user
+
+    profile.is_blocked = False
+    profile.save()
+
+    user.is_active = False
+    user.save()
 
 
 @transaction.atomic

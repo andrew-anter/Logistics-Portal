@@ -5,7 +5,7 @@ from django.db.models import QuerySet
 
 from .forms import ProfileAdminForm
 from .models import Profile
-from .services import block_profiles_service, unblock_profiles_service
+from .services import block_profile_service, unblock_profile_service
 
 
 @admin.register(Profile)
@@ -85,12 +85,17 @@ class ProfileAdmin(admin.ModelAdmin):
         return actions
 
     def unblock_profiles(self, request, queryset: QuerySet[Profile]) -> None:  # noqa: ANN001
-        unblock_profiles_service(qs=queryset)
+        for profile in queryset:
+            unblock_profile_service(profile=profile)
         self.message_user(request, "Selected profiles have been unblocked.")
 
     def block_profiles(self, request, queryset: QuerySet[Profile]) -> None:  # noqa: ANN001
-        block_profiles_service(qs=queryset)
-        self.message_user(request, "Selected profiles have been blocked.")
+        for profile in queryset:
+            block_profile_service(profile=profile)
+        self.message_user(
+            request,
+            "Selected profiles have been blocked and their sessions invalidated.",
+        )
 
     unblock_profiles.short_description = "Unblock Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]
     block_profiles.short_description = "Block Selected Profiles"  # pyright: ignore[reportFunctionMemberAccess]

@@ -5,9 +5,9 @@ from apps.companies.services import create_company
 from ..models import Profile, User
 from ..roles import Role, get_role_group
 from ..services import (
-    block_profiles_service,
+    block_profile_service,
     create_profile_service,
-    unblock_profiles_service,
+    unblock_profile_service,
     update_profile_service,
 )
 
@@ -63,22 +63,16 @@ def test_update_profile_service(user_profile, company):
 
 
 @pytest.mark.django_db
-def test_block_profiles(profiles, company):
-    block_profiles_service(qs=profiles)
-    assert (
-        Profile.objects.for_tenant(company).filter(is_blocked=True).count()  # pyright: ignore
-        == profiles.count()
-    )
+def test_block_profiles(user_profile):
+    block_profile_service(profile=user_profile)
+    assert user_profile.is_blocked
 
 
 @pytest.mark.django_db
-def test_unblock_profiles(profiles, company):
-    block_profiles_service(qs=profiles)
-    unblock_profiles_service(qs=profiles)
-    assert (
-        Profile.objects.for_tenant(company).filter(is_blocked=False).count()  # pyright: ignore
-        == profiles.count()
-    )
+def test_unblock_profiles(user_profile):
+    block_profile_service(profile=user_profile)
+    unblock_profile_service(profile=user_profile)
+    assert not user_profile.is_blocked
 
 
 @pytest.mark.django_db

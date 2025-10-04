@@ -6,22 +6,25 @@ from .models import User
 
 class TenantBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):  # noqa: ANN001, ANN003, ANN201, ARG002
-        current_tenant = get_current_tenant()
+        current_company = get_current_tenant()
 
         try:
-            user = User.objects.get(
+            user = User.objects.select_related(
+                "profile__company",
+            ).get(
                 email__iexact=username,
-                profile__company=current_tenant,
             )
 
-            if not user:
+            if user.is_superuser and user.check_password(password):  # pyright: ignore[reportArgumentType]
+                return user
+
+            if user.profile.is_blocked:  # pyright: ignore[reportAttributeAccessIssue]
+                return None
+
+            if user.profile.company != current_company:  # pyright: ignore[reportAttributeAccessIssue]
                 return None
 
         except User.DoesNotExist:
-            return None
-
-        # Don't allow login on non-tenant domains for non-superusers
-        if not current_tenant and not user.is_superuser:
             return None
 
         # Check password and return user if valid
