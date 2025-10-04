@@ -4,8 +4,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import QuerySet
 
 from .forms import ProfileAdminForm
-from .models import Profile
+from .models import Profile, User
 from .services import block_profile_service, unblock_profile_service
+
+admin.site.register(User)
 
 
 @admin.register(Profile)
