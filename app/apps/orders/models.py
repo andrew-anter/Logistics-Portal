@@ -25,3 +25,28 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         return f"Order {self.reference_code}"
+
+
+class Export(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        READY = "ready", "Ready"
+        FAILED = "failed", "Failed"
+
+    requested_by = models.ForeignKey(
+        "users.Profile",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    company = models.ForeignKey("companies.Company", on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    file = models.FileField(upload_to="exports/", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    objects = TenantManager()
+
+    def __str__(self) -> str:
+        return f"export number {self.pk}"
