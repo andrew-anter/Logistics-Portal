@@ -1,3 +1,5 @@
+from typing import NotRequired, TypedDict, Unpack
+
 from django.contrib.auth.models import Group, User
 from django.db import transaction
 from django.db.models import QuerySet
@@ -8,30 +10,68 @@ from .models import Profile
 from .roles import Role, get_role_group
 
 
+class ProfileData(TypedDict):
+    """Data for creating or updating a user profile."""
+
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    company: Company
+    role: Group
+    password: NotRequired[str]
+    is_blocked: NotRequired[bool]
+
+
 @transaction.atomic
-def create_profile_service(
-    *,
-    username: str,
-    email: str,
-    first_name: str,
-    last_name: str,
-    password: str,
-    company: Company,
-    role: Group,
-) -> Profile:
+def create_profile_service(**data: Unpack[ProfileData]) -> Profile:
     user = User(
-        username=username,
-        email=email,
-        first_name=first_name,
-        last_name=last_name,
+        username=data["username"],
+        email=data["email"],
+        first_name=data["first_name"],
+        last_name=data["last_name"],
     )
+
+    password = data["password"]
     user.set_password(password)
     user.full_clean()
     user.save()
-    user.groups.add(role)
 
+    role = data["role"]
+    company = data["company"]
     profile = Profile(user=user, company=company, role=role)
     profile.full_clean()
+    profile.save()
+    user.groups.add(role)
+
+    return profile
+
+
+@transaction.atomic
+def update_profile_service(profile: Profile, **data: Unpack[ProfileData]) -> Profile:
+    """
+    Updates a user and their associated profile from a dictionary of data.
+    """
+    user = profile.user
+
+    # Update User fields
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+
+    # Securely handle password change if a new one is provided
+    password = data.get("password")
+    if password:
+        user.set_password(password)
+
+    user.save()
+
+    # Update Profile fields
+    profile.role = data.get("role", profile.role)
+    profile.is_blocked = data.get("is_blocked", profile.is_blocked)
+    profile.company = data.get("company", profile.company)
+
     profile.save()
 
     return profile

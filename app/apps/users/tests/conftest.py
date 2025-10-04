@@ -5,7 +5,7 @@ from apps.companies.models import Company
 from apps.companies.services import create_company
 
 from ..models import Profile
-from ..roles import get_role_group, Role
+from ..roles import Role, get_role_group
 from ..services import create_profile_service
 
 
