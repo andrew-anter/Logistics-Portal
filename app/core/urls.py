@@ -4,9 +4,12 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.authtoken.views import obtain_auth_token
 
+from .views import HealthCheckView
+
 core_urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/get-token/", obtain_auth_token),
+    path("health/", HealthCheckView.as_view(), name="health-check"),
 ]
 
 prodcuts_urlpatterns = [
