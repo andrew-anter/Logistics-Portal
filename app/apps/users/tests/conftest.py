@@ -23,7 +23,6 @@ def user_profile(company) -> Profile:
     last_name = f"{username} last name"
     password = f"{username} password"
     return create_profile_service(
-        username=username,
         email=email,
         first_name=first_name,
         last_name=last_name,
@@ -43,7 +42,6 @@ def profiles(company) -> QuerySet[Profile]:
         last_name = f"{username} last name"
         password = f"{username} password"
         create_profile_service(
-            username=username,
             email=email,
             first_name=first_name,
             last_name=last_name,
@@ -51,4 +49,4 @@ def profiles(company) -> QuerySet[Profile]:
             role=role,
             password=password,
         )
-    return Profile.objects.for_tenant(company).all()
+    return Profile.objects.for_tenant(company).all()  # pyright: ignore[reportAttributeAccessIssue]
