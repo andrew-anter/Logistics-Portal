@@ -33,8 +33,9 @@ services:
 
   app:
     build: .
-    # command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
     command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - media:/app/media
     ports:
       - "8000:8000"
     environment:
@@ -55,6 +56,8 @@ services:
   worker:
     build: .
     command: celery -A core worker -l info
+    volumes:
+      - media:/app/media
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
@@ -70,4 +73,5 @@ services:
 
 
 volumes:
+  media:
   postgres_data:

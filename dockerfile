@@ -11,10 +11,6 @@ RUN uv pip install --system --no-cache .
 FROM python:3.13-slim
 WORKDIR /app
 
-# Create a non-root user for security
-RUN useradd -ms /bin/bash appuser
-USER appuser
-
 # Copy installed dependencies from the builder stage
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
