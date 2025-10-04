@@ -3,7 +3,13 @@ import pytest
 from apps.companies.models import Company
 
 from ..models import Product
-from ..services import ProductData, create_product_service, update_product_service
+from ..services import (
+    ProductData,
+    activate_products_service,
+    create_product_service,
+    deactivate_products_service,
+    update_product_service,
+)
 
 
 @pytest.mark.django_db
@@ -21,6 +27,22 @@ def test_create_product_service(company: Company):
     assert created_product.stock_quantity == 50
     assert created_product.is_active is False
     assert created_product.company == company
+
+
+@pytest.mark.django_db
+def test_activate_products_service(products):
+    products.update(is_active=False)
+
+    activate_products_service(products_qs=products)
+
+    assert products.count() == products.filter(is_active=True).count()
+
+
+@pytest.mark.django_db
+def test_deactivate_products_service(products):
+    deactivate_products_service(products_qs=products)
+
+    assert products.count() == products.filter(is_active=False).count()
 
 
 @pytest.mark.django_db

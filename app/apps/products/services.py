@@ -1,6 +1,7 @@
 from typing import NotRequired, TypedDict, Unpack
 
 from django.db import transaction
+from django.db.models import QuerySet
 
 from apps.companies.models import Company
 
@@ -41,3 +42,11 @@ def update_product_service(*, product: Product, **data: Unpack[ProductData]) -> 
     product.save()
 
     return product
+
+
+def activate_products_service(*, products_qs: QuerySet[Product]) -> None:
+    products_qs.update(is_active=True)
+
+
+def deactivate_products_service(*, products_qs: QuerySet[Product]) -> None:
+    products_qs.update(is_active=False)

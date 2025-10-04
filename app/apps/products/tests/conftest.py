@@ -19,3 +19,15 @@ def product(company: Company) -> Product:
         "stock_quantity": 100,
     }
     return create_product_service(company=company, **initial_data)
+
+
+@pytest.fixture
+def products(company: Company) -> Product:
+    for i in range(5):
+        initial_data: ProductData = {
+            "name": f"Product{i}",
+            "stock_quantity": 100 + i * 3,
+        }
+        create_product_service(company=company, **initial_data)
+
+    return Product.objects.for_tenant(company).all()  # pyright: ignore[reportAttributeAccessIssue]
