@@ -41,13 +41,13 @@ class TenantBackend(ModelBackend):
             if not user.check_password(password):
                 return None
 
-            # Check if the user is blocked or inactive
-            if user.profile.is_blocked or not user.is_active:
-                return None
-
             # If the user is a superuser, they can log in anywhere
             if user.is_superuser:
                 return user
+
+            # Check if the user is blocked or inactive
+            if user.profile.is_blocked or not user.is_active:
+                return None
 
             # For regular users, check if they belong to the current tenant
             current_tenant = get_current_tenant()
