@@ -105,7 +105,7 @@ def unblock_profile_service(*, profile: Profile) -> None:
     profile.is_blocked = False
     profile.save()
 
-    user.is_active = False
+    user.is_active = True
     user.save()
 
 
