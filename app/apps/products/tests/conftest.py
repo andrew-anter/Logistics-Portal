@@ -38,12 +38,12 @@ def products(company: Company) -> Product:
 
 @pytest.fixture
 def company_a() -> Company:
-    return Company.objects.create(name="Company A", domain="companya")
+    return create_company(name="Company A", domain="companya")
 
 
 @pytest.fixture
 def company_b() -> Company:
-    return Company.objects.create(name="Company B", domain="companyb")
+    return create_company(name="Company B", domain="companyb")
 
 
 @pytest.fixture
