@@ -30,6 +30,7 @@ def create_profile_service(**data: Unpack[ProfileData]) -> Profile:
         email=data["email"],
         first_name=data["first_name"],
         last_name=data["last_name"],
+        is_staff=True,
     )
 
     password = data["password"]
