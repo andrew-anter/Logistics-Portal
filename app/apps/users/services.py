@@ -24,16 +24,17 @@ def create_profile_service(
         email=email,
         first_name=first_name,
         last_name=last_name,
-        password=password,
     )
+    user.set_password(password)
     user.full_clean()
     user.save()
+    user.groups.add(role)
 
-    user_profile = Profile(user=user, company=company, role=role)
-    user_profile.full_clean()
-    user_profile.save()
+    profile = Profile(user=user, company=company, role=role)
+    profile.full_clean()
+    profile.save()
 
-    return user_profile
+    return profile
 
 
 def block_profiles_service(*, qs: QuerySet[Profile]) -> None:
@@ -50,3 +51,6 @@ def change_user_role(*, user_profile: Profile, new_role: Role) -> None:
     user_profile.role = role_group
     user_profile.full_clean()
     user_profile.save()
+
+    user_profile.user.groups.clear()
+    user_profile.user.groups.add(role_group)
