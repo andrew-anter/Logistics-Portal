@@ -1,11 +1,14 @@
 from core.thread_locals import get_current_tenant
+from django.http import FileResponse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Order
 from apps.users.roles import Role, get_role_group
+
+from .models import Export, Order
 from .serializers import OrderCreateSerializer, OrderReadSerializer
 from .services import create_order_service, retry_order_service
 
@@ -70,3 +73,23 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({"status": "order re-queued for processing"})
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExportDownloadView(APIView):
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
+
+    def get(self, request, pk: int):  # noqa: ANN001, ANN201
+        try:
+            export = Export.objects.get(
+                pk=pk,
+                status=Export.Status.READY,
+                file__isnull=False,
+            )
+        except Export.DoesNotExist:
+            return Response(
+                {"error": "Export is not ready for download."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Open the file and create a streaming FileResponse
+        return FileResponse(export.file.open("rb"), as_attachment=True)

@@ -1,5 +1,6 @@
 import pytest
 from core.thread_locals import delete_current_tenant, set_current_tenant
+from django.core.files.base import ContentFile
 from rest_framework.test import APIClient
 
 from apps.companies.models import Company
@@ -11,13 +12,18 @@ from apps.users.roles import Role, get_role_group
 from apps.users.services import create_profile_service
 from apps.users.signals import create_roles_and_permissions
 
-from ..models import Order
+from ..models import Export, Order
 from ..services import create_order_service
 
 
 @pytest.fixture
 def company() -> Company:
     return create_company(name="test company", domain="test")
+
+
+@pytest.fixture
+def company_b() -> Company:
+    return create_company(name="company b", domain="companyb")
 
 
 @pytest.fixture
@@ -114,3 +120,18 @@ def admin_profile(company, setup_roles_and_permissions):
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture
+def ready_export(company, operator_profile, settings, tmp_path, setup_current_tenant):
+    settings.MEDIA_ROOT = tmp_path
+    export = Export.objects.create(
+        company=company,
+        requested_by=operator_profile,
+        status=Export.Status.READY,
+    )
+    # Create a dummy CSV file in memory and attach it
+    csv_content = "header1,header2\ndata1,data2"
+    file_content = ContentFile(csv_content.encode("utf-8"))
+    export.file.save("dummy_export.csv", file_content)
+    return export

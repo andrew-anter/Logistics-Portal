@@ -1,7 +1,10 @@
 import pytest
+from core.thread_locals import delete_current_tenant, set_current_tenant
 
 from apps.orders.models import Order
 from apps.orders.services import create_order_service
+
+from ..models import Export
 
 
 @pytest.mark.django_db
@@ -158,3 +161,79 @@ class TestOrderAPI:
         response = api_client.get("/api/orders/")
         # Assert
         assert response.status_code == 401  # Unauthorized
+
+
+@pytest.mark.django_db
+def test_download_export_success(
+    api_client,
+    operator_profile,
+    company,
+    ready_export,
+    setup_current_tenant,
+    tmp_path,
+    settings,
+):
+    settings.MEDIA_ROOT = tmp_path
+
+    # Arrange
+    api_client.force_authenticate(user=operator_profile.user)
+
+    # Act
+    response = api_client.get(f"/api/orders/exports/{ready_export.pk}/download/")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.has_header("Content-Disposition")
+    assert 'attachment; filename="dummy_export.csv"' in response["Content-Disposition"]
+
+    full_content = b"".join(response.streaming_content)
+    assert full_content == b"header1,header2\ndata1,data2"
+
+
+@pytest.mark.django_db
+def test_download_export_permission_denied(
+    api_client,
+    company_b,
+    admin_profile,
+    ready_export,
+    tmp_path,
+    settings,
+):
+    set_current_tenant(company_b)
+    settings.MEDIA_ROOT = tmp_path
+
+    # Arrange: An admin from a different company (company_b) tries to download the file  # noqa: E501
+    admin_profile.company = company_b
+    admin_profile.save()
+    api_client.force_authenticate(user=admin_profile.user)
+
+    # Act
+    response = api_client.get(f"/api/orders/exports/{ready_export.pk}/download/")
+
+    # Assert: No exports for that company with this id
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_download_export_not_ready(
+    api_client,
+    operator_profile,
+    company,
+    setup_current_tenant,
+    tmp_path,
+    settings,
+):
+    settings.MEDIA_ROOT = tmp_path
+    # Arrange: Create an export that is still pending and has no file
+    pending_export = Export.objects.create(
+        company=company,
+        requested_by=operator_profile,
+        status=Export.Status.PENDING,
+    )
+    api_client.force_authenticate(user=operator_profile.user)
+
+    # Act
+    response = api_client.get(f"/api/orders/exports/{pending_export.pk}/download/")
+
+    # Assert
+    assert response.status_code == 404
