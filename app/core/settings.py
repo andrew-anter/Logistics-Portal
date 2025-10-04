@@ -56,6 +56,10 @@ MIDDLEWARE = [
     "apps.companies.middleware.TenantMiddleware",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "apps.users.backends.TenantBackend",
+]
+
 ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [

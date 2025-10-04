@@ -11,14 +11,14 @@ from .services import block_profiles_service, unblock_profiles_service
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     form = ProfileAdminForm
-    search_fields = ("user__username", "user__first_name", "user__last_name")
+    search_fields = ("user__email", "user__first_name", "user__last_name")
 
     def get_list_display(self, request):  # noqa: ANN001, ANN201
         """
         Dynamically sets the columns in the list view based on user type.
         """
         # Start with a base set of fields everyone sees.
-        base_fields = ("username", "full_name", "email", "role", "is_blocked")
+        base_fields = ("full_name", "email", "role", "is_blocked")
 
         # If the user is a superuser, add the 'company' column.
         if request.user.is_superuser:
@@ -68,10 +68,6 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             form.base_fields.pop("company", None)  # pyright: ignore[reportAttributeAccessIssue]
         return form
-
-    @admin.display(description="Username")
-    def username(self, obj):  # noqa: ANN001, ANN201
-        return obj.user.username
 
     @admin.display(description="Full Name")
     def full_name(self, obj):  # noqa: ANN001, ANN201

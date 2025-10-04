@@ -14,12 +14,10 @@ class User(AbstractUser):
         help_text="Required. A unique identifier for the user.",
     )
     email = models.EmailField()
-
-    # The login field remains 'username'
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.email
 
 

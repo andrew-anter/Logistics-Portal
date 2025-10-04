@@ -42,25 +42,29 @@ class ProfileAdminForm(forms.ModelForm):
         return password
 
     def clean_email(self):  # noqa: ANN201
-        """
-        Check that the email is unique for the given company.
-        """
         email = self.cleaned_data.get("email")
+
+        # We need the company to check for uniqueness
         company = self.cleaned_data.get("company")
+        if not company and self.request and not self.request.user.is_superuser:  # pyright: ignore[reportAttributeAccessIssue]
+            company = self.request.user.profile.company  # pyright: ignore[reportAttributeAccessIssue]
 
         if company and email:
             query = User.objects.filter(profile__company=company, email__iexact=email)
 
+            # On an update, exclude the current user from the check
             if self.instance and self.instance.pk:
                 query = query.exclude(pk=self.instance.user.pk)
 
             if query.exists():
-                msg = "A user with this email already exists in the system."
+                msg = "A user with this email already exists in this company."
                 raise forms.ValidationError(msg)
 
         return email
 
     def save(self, commit=True):  # noqa: ANN001, ANN201, FBT002
+        super().save(commit=False)
+
         if "company" not in self.cleaned_data:
             company = get_current_tenant()
         else:
@@ -80,8 +84,7 @@ class ProfileAdminForm(forms.ModelForm):
             profile = super().save(commit=False)
             update_profile_service(profile=profile, **self.cleaned_data)
 
-            if commit:
-                super().save(commit=False)
-                self.save_m2m()
+        if commit:
+            self.save_m2m()
 
         return self.instance
