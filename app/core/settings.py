@@ -30,6 +30,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 PROJECT_APPS = [
@@ -59,6 +60,13 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     "apps.users.backends.TenantBackend",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.users.authentication.TenantTokenAuthentication",
+    ],
+}
+
 
 ROOT_URLCONF = "core.urls"
 

@@ -1,34 +1,57 @@
 from core.thread_locals import get_current_tenant
 from django.contrib.auth.backends import ModelBackend
+from rest_framework.authtoken.models import Token
 
 from .models import User
 
 
 class TenantBackend(ModelBackend):
-    def authenticate(self, request, username=None, password=None, **kwargs):  # noqa: ANN001, ANN003, ANN201, ARG002
-        current_company = get_current_tenant()
+    def authenticate(
+        self,
+        request,
+        username=None,
+        password=None,
+        token_key=None,
+        company=None,
+        **kwargs,
+    ):
+        # --- API Token Authentication Flow ---
+        if token_key and company:
+            try:
+                token = Token.objects.select_related("user").get(key=token_key)
+                user = token.user
+                if (
+                    user.profile.company == company
+                    and not user.profile.is_blocked
+                    and user.is_active
+                ):
+                    return user  # API login successful
+            except Token.DoesNotExist:
+                return None
 
-        try:
-            user = User.objects.select_related(
-                "profile__company",
-            ).get(
-                email__iexact=username,
-            )
+        # --- Django Admin/Session Authentication Flow ---
+        elif username and password:
+            try:
+                # Find the user by email (which is passed as 'username')
+                user = User.objects.get(email__iexact=username)
+            except User.DoesNotExist:
+                return None
 
-            if user.is_superuser and user.check_password(password):  # pyright: ignore[reportArgumentType]
+            # Check the password first
+            if not user.check_password(password):
+                return None
+
+            # Check if the user is blocked or inactive
+            if user.profile.is_blocked or not user.is_active:
+                return None
+
+            # If the user is a superuser, they can log in anywhere
+            if user.is_superuser:
                 return user
 
-            if user.profile.is_blocked:  # pyright: ignore[reportAttributeAccessIssue]
-                return None
+            # For regular users, check if they belong to the current tenant
+            current_tenant = get_current_tenant()
+            if current_tenant and user.profile.company == current_tenant:
+                return user
 
-            if user.profile.company != current_company:  # pyright: ignore[reportAttributeAccessIssue]
-                return None
-
-        except User.DoesNotExist:
-            return None
-
-        # Check password and return user if valid
-        if user.check_password(password):  # pyright: ignore[reportArgumentType]
-            return user
-
-        return None
+        return None  # Deny access in all other cases
