@@ -43,7 +43,7 @@ thread_data = threading.local()
 
 
 @pytest.fixture
-def setup_thread_local(company):
+def setup_current_tenant(company):
     set_current_tenant(company)
     yield
     delete_current_tenant()
