@@ -90,7 +90,11 @@ class OrderAdmin(admin.ModelAdmin):
             company=company,
         )
         order_ids = list(queryset.values_list("id", flat=True))
-        generate_export_file_task.delay(export_id=export.pk, order_ids=order_ids)  # pyright: ignore[reportCallIssue]
+        generate_export_file_task.delay(
+            export_id=export.pk,
+            order_ids=order_ids,
+            company_id=company.id,
+        )
         self.message_user(request, "Export task has been started.")
 
     export_selected_orders.short_description = "Export selected orders"  # pyright: ignore[reportFunctionMemberAccess]
