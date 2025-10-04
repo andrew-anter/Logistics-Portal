@@ -1,6 +1,6 @@
 from django.db.models import QuerySet
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 
 from .models import Product
 from .serializers import ProductSerializer
@@ -9,7 +9,7 @@ from .serializers import ProductSerializer
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     # Protect the endpoint, only authenticated users can access it
-    permission_classes = [IsAuthenticated]  # noqa: RUF012
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]  # noqa: RUF012
 
     def get_queryset(self) -> QuerySet[Product]:  # pyright: ignore[reportIncompatibleMethodOverride]
         """
