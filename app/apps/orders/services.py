@@ -47,7 +47,13 @@ def approve_order_service(*, order: Order) -> None:
     """
     Approves an order if stock is available, and deducts the stock quantity.
     """
-    if order.status != Order.Status.PROCESSING or not order.product.is_active:
+    if (
+        not (
+            order.status == Order.Status.PROCESSING
+            or order.status == Order.Status.PENDING
+        )
+        or not order.product.is_active
+    ):
         return
 
     product = order.product

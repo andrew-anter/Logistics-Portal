@@ -93,12 +93,11 @@ class OrderAdmin(admin.ModelAdmin):
 
     def approve_selected_orders(self, orderadmin, request, queryset) -> None:  # noqa: ANN001
         """Triggers processing for selected PENDING orders."""
-        pending_orders = queryset.filter(status=Order.Status.PENDING)
-        for order in pending_orders:
+        for order in queryset:
             approve_order_service(order=order)
         self.message_user(
             request,
-            f"{pending_orders.count()} orders have been queued for approval.",
+            f"{queryset.count()} orders have been queued for approval.",
         )
 
     def retry_failed_orders(self, orderadmin, request, queryset) -> None:  # noqa: ANN001
