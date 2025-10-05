@@ -40,6 +40,7 @@ services:
       - "8000:8000"
     environment:
       - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=PRODUCTION
       - DEBUG=${DEBUG}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -60,6 +61,7 @@ services:
       - media:/app/media
     environment:
       - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=PRODUCTION
       - DEBUG=${DEBUG}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
