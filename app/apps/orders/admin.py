@@ -60,6 +60,12 @@ class OrderAdmin(admin.ModelAdmin):
                 company=company,
             )
 
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
     def get_queryset(self, request):  # noqa: ANN001, ANN201
         """
         Filters the queryset based on the user's role.
