@@ -4,10 +4,10 @@ from django.utils.html import format_html
 
 from apps.users.roles import Role
 
-from .models import Export, Order
-from .services import approve_order_service, retry_order_service, create_order_service
-from .tasks import generate_export_file_task
 from .forms import OrderAdminForm
+from .models import Export, Order
+from .services import approve_order_service, create_order_service, retry_order_service
+from .tasks import generate_export_file_task
 
 
 @admin.register(Order)
@@ -21,7 +21,7 @@ class OrderAdmin(admin.ModelAdmin):
         Dynamically sets the filters, showing 'company' only for superusers.
         """
         if request.user.is_superuser:
-            return ("company", "status")
+            return ("company", "status", "has_been_processed")
         return ("status",)
 
     def get_list_display(self, request):
@@ -34,6 +34,7 @@ class OrderAdmin(admin.ModelAdmin):
             "product",
             "quantity",
             "status",
+            "has_been_processed",
             "created_by",
             "created_at",
         )
