@@ -29,7 +29,7 @@ class TestOrderAPI:
             created_by=operator_profile,
             company=company,
         )
-        mock_process_task.assert_called_once_with(order1.pk)
+        mock_process_task.assert_called_once_with(order1.pk, company_id=company.pk)
 
         create_order_service(
             product=product,
