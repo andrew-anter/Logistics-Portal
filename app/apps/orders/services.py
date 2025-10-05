@@ -1,9 +1,13 @@
+import logging
+
 from apps.companies.models import Company
 from apps.products.models import Product
 from apps.products.services import adjust_product_stock_service
 from apps.users.models import Profile
 
 from .models import Order
+
+logger = logging.getLogger(__name__)
 
 
 def create_order_service(
@@ -50,9 +54,14 @@ def approve_order_service(*, order: Order) -> None:
             product=product,
             quantity_change=-order.quantity,
         )
+        logger.info("Order %s approved.", order.reference_code)
 
     else:
         order.status = Order.Status.FAILED
+        logger.warning(
+            "Order %s failed due to insufficient stock.",
+            order.reference_code,
+        )
 
     order.has_been_processed = True
     order.save()

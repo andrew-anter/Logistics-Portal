@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 
 from celery import shared_task
 from django.core.files.base import ContentFile
@@ -8,6 +9,8 @@ from django.db import transaction
 from .models import Export, Order
 from .selectors import get_export_for_company, get_orders_for_company
 from .services import approve_order_service
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -65,9 +68,11 @@ def generate_export_file_task(
         # Mark the export as ready
         export.status = Export.Status.READY
         export.save()
+        logger.info("Successfully completed export for Export ID: %d", export_id)
 
     except Exception:
         # If anything goes wrong, mark the export as failed
+        logger.exception("Export failed for Export ID: %d. ", export.pk)
         if "export" in locals():
             export.status = Export.Status.FAILED
             export.save()
