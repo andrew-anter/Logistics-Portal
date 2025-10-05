@@ -5,14 +5,16 @@ from django.utils.html import format_html
 from apps.users.roles import Role
 
 from .models import Export, Order
-from .services import approve_order_service, retry_order_service
+from .services import approve_order_service, retry_order_service, create_order_service
 from .tasks import generate_export_file_task
+from .forms import OrderAdminForm
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     search_fields = ("reference_code", "product__name", "created_by__user__username")
     readonly_fields = ("reference_code", "created_at", "updated_at")
+    form = OrderAdminForm
 
     def get_list_filter(self, request):
         """
@@ -44,6 +46,19 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
         return base_display
+
+    def save_model(self, request, obj, form, change):
+        """
+        Automatically set created_by, company, and status for new orders.
+        """
+        if not change:  # Only on creation
+            company = get_current_tenant()
+            create_order_service(
+                product=obj.product,
+                quantity=obj.quantity,
+                created_by=request.user.profile,
+                company=company,
+            )
 
     def get_queryset(self, request):  # noqa: ANN001, ANN201
         """
