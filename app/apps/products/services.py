@@ -62,8 +62,11 @@ def adjust_product_stock_service(*, product: Product, quantity_change: int) -> P
     Adjusts a product's stock quantity.
     quantity_change can be positive or negative.
     """
+    company = product.company
     # Lock the product row to prevent race conditions
-    product_to_update = Product.objects.select_for_update().get(pk=product.pk)
+    product_to_update = (
+        Product.objects.for_tenant(company).select_for_update().get(pk=product.pk)
+    )
 
     if quantity_change < 0 and product_to_update.stock_quantity < abs(quantity_change):
         raise ValueError(
