@@ -1,6 +1,7 @@
 import csv
 import io
 import logging
+import time
 
 from celery import shared_task
 from django.core.files.base import ContentFile
@@ -14,16 +15,42 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def process_order_task(order_id: int) -> None:
-    try:
-        with transaction.atomic():
-            order = Order.objects.get(id=order_id, status=Order.Status.PENDING)
+def process_order_task(order_id: int, company_id: int) -> None:
+    orders = get_orders_for_company(company_pk=company_id)
+    with transaction.atomic():
+        try:
+            order = orders.get(
+                id=order_id,
+                status=Order.Status.PENDING,
+            )
+        except Order.DoesNotExist:
+            return
+
+        try:
             order.status = Order.Status.PROCESSING
             order.save()
-            approve_order_service(order=order)
 
-    except Order.DoesNotExist:
-        pass
+            # --- External Call Simulation ---
+            logger.info(
+                "Order %s: Simulating external API call...",
+                order.reference_code,
+            )
+            time.sleep(5)
+            logger.info(
+                "Order %s: External call simulation finished.",
+                order.reference_code,
+            )
+            # --- End of simulation ---
+
+            approve_order_service(order=order)
+        except Exception as e:
+            logger.exception(e)
+            if order.status == Order.Status.PROCESSING:
+                order.status = Order.Status.FAILED
+                order.has_been_processed = True
+                order.save()
+                msg = f"Order {order.reference_code} failed unexpectedly and was marked as FAILED."
+                logger.error(msg)
 
 
 @shared_task

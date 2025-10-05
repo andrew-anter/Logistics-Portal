@@ -1,5 +1,7 @@
 import logging
 
+from django.db import transaction
+
 from apps.companies.models import Company
 from apps.products.models import Product
 from apps.products.services import adjust_product_stock_service
@@ -35,16 +37,17 @@ def create_order_service(
         status=Order.Status.PENDING,
     )
 
-    process_order_task.delay(order.pk)
+    process_order_task.delay(order.pk, company_id=order.company.pk)
 
     return order
 
 
+@transaction.atomic
 def approve_order_service(*, order: Order) -> None:
     """
     Approves an order if stock is available, and deducts the stock quantity.
     """
-    if order.status != Order.Status.PENDING:
+    if order.status != Order.Status.PROCESSING or not order.product.is_active:
         return
 
     product = order.product
@@ -81,6 +84,6 @@ def retry_order_service(*, order: Order) -> Order:
     order.has_been_processed = False
     order.save()
 
-    process_order_task.delay(order.pk)
+    process_order_task.delay(order.pk, company_id=order.company.pk)
 
     return order
