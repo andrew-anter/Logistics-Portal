@@ -1,8 +1,3 @@
-Of course. Here is a comprehensive `README.md` file for your project based on all the features we've built. This file includes the setup instructions, API usage, and design notes required by the task.
-
-You can copy and paste this directly into a `README.md` file in your project's root directory.
-
------
 
 ````markdown
 # B2B Logistics Portal
