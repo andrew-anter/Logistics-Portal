@@ -31,6 +31,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = ["rest_framework", "rest_framework.authtoken", "decouple"]
 
 PROJECT_APPS = [
+    "core",
     "apps.users",
     "apps.companies",
     "apps.orders",

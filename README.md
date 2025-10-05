@@ -145,8 +145,40 @@ The "Retry failed orders" action (available in the admin) or the `POST /api/orde
 To run the test suite, execute the following command:
 
 ```bash
-docker-compose exec app pytest
+uv sync
+uv run pytest
 ```
 
 ```
 ```
+
+## Design Notes
+
+### Export Logic
+The data export feature is implemented as an asynchronous background task to avoid blocking the user interface. When an admin selects "Export selected orders," the following happens:
+1.  An `Export` model instance is created with a `PENDING` status to track the request.
+2.  A Celery task (`generate_export_file_task`) is dispatched, receiving the `Export` ID and the list of `Order` IDs to be exported.
+3.  The Celery worker generates a CSV file in memory, saves it to the `Export` object's `file` field in media storage, and updates the status to `READY`.
+4.  The user can then download the completed file via the `GET /api/exports/<id>/download/` endpoint.
+
+### Retry Logic
+The order retry feature is designed to re-process an order that has previously failed. It is available as both an admin action and a dedicated API endpoint (`POST /api/orders/<id>/retry/`).
+1.  The action can only be performed on an order with a `FAILED` status.
+2.  The logic resets the order's `has_been_processed` flag to `False` and its `status` back to `PENDING`.
+3.  It then re-dispatches the original `process_order_task` to Celery, giving the system another chance to approve the order and deduct stock.
+
+
+### 5. (Optional) Load Sample Data
+To populate the database with a few sample companies, users, and products, run the following command:
+```bash
+docker-compose exec app python manage.py seed_data
+```
+
+
+This will create two companies, "MegaCorp" and "LogiPro," with a user in each.
+```csv
+admin@megacorp.com,(password: password123)
+operator@logipro.com,(password: password123)
+```
+
+
