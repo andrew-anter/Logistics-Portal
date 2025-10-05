@@ -142,10 +142,13 @@ The "Retry failed orders" action (available in the admin) or the `POST /api/orde
 
 ## Running Tests
 
-To run the test suite, execute the following command:
+To run the test suite, 
+1. override the database settings to use db.sqlite3
+2. execute the following commands:
 
 ```bash
 uv sync
+cd ./app
 uv run pytest
 ```
 
